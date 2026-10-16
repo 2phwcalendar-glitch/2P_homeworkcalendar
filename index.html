@@ -3,13 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>多人日历 · 移动适配 · Gist 同步</title>
+    <title>多人日历 · 移动适配 · Gist 同步（CORS修复）</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
-
         html, body { overflow-x: hidden; width: 100%; }
-
         body {
             background: #f0f2f5;
             padding: 0.8rem 0.4rem;
@@ -20,20 +18,13 @@
             padding-top: max(0.6rem, env(safe-area-inset-top));
             padding-bottom: max(0.6rem, env(safe-area-inset-bottom));
         }
-
         .app-container {
-            width: 100%;
-            max-width: 1200px;
-            background: white;
-            border-radius: 1.5rem;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
-            overflow: hidden;
-            padding: 1.5rem 1.2rem;
+            width: 100%; max-width: 1200px; background: white;
+            border-radius: 1.5rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            overflow: hidden; padding: 1.5rem 1.2rem;
         }
-
         h1 { font-size: 1.5rem; font-weight: 600; color: #1e293b; display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.25rem; flex-wrap: wrap; }
         h1 i { color: #3b82f6; font-size: 1.7rem; }
-
         .subhead {
             color: #64748b; margin-bottom: 1.2rem; font-size: 0.85rem;
             border-left: 4px solid #3b82f6; padding: 0.4rem 0.8rem;
@@ -41,7 +32,6 @@
             display: flex; align-items: center; justify-content: space-between;
             flex-wrap: wrap; gap: 0.4rem;
         }
-
         .sync-status { font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 20px; display: inline-flex; align-items: center; gap: 0.3rem; white-space: nowrap; }
         .sync-status.synced { background: #dcfce7; color: #166534; }
         .sync-status.syncing { background: #fef3c7; color: #92400e; }
@@ -54,16 +44,11 @@
             margin-bottom: 1.2rem; border: 1px solid #e2e8f0;
             display: flex; flex-wrap: wrap; align-items: flex-end; gap: 0.8rem;
         }
-
         .input-group { flex: 1 1 140px; display: flex; flex-direction: column; gap: 0.3rem; min-width: 0; }
         .input-group label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; color: #475569; display: flex; align-items: center; gap: 0.25rem; }
         .input-group label i { font-size: 0.8rem; color: #3b82f6; }
-        .input-group input {
-            padding: 0.7rem 0.8rem; border: 1px solid #cbd5e1; border-radius: 0.9rem;
-            font-size: 16px; outline: none; transition: 0.15s; background: white; width: 100%;
-        }
+        .input-group input { padding: 0.7rem 0.8rem; border: 1px solid #cbd5e1; border-radius: 0.9rem; font-size: 16px; outline: none; transition: 0.15s; background: white; width: 100%; }
         .input-group input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.2); }
-
         .add-btn {
             background: #3b82f6; color: white; border: none; border-radius: 0.9rem;
             padding: 0.7rem 1.4rem; font-weight: 600; font-size: 0.95rem;
@@ -77,7 +62,6 @@
         .month-year { font-size: 1.3rem; font-weight: 600; color: #0f172a; display: flex; align-items: center; gap: 0.5rem; }
         .month-year i { color: #3b82f6; font-size: 1.3rem; }
         .nav-buttons { display: flex; gap: 0.4rem; align-items: center; }
-
         .nav-btn, .today-btn {
             background: white; border: 1px solid #e2e8f0; border-radius: 0.7rem;
             display: flex; align-items: center; justify-content: center; color: #334155;
@@ -90,92 +74,45 @@
         .weekdays { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; margin-bottom: 0.3rem; gap: 0.2rem; }
         .weekday { font-weight: 600; font-size: 0.65rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.3px; padding: 0.3rem 0; }
 
-        /* 日历网格 */
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, minmax(0, 1fr));  /* ✅ 关键：minmax(0,1fr) 允许收缩 */
-            gap: 0.2rem;
-            width: 100%;
-        }
-
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0.2rem; width: 100%; }
         .day-cell {
-            background: white;
-            border-radius: 0.6rem;
-            min-height: 5rem;
-            min-width: 0;                /* ✅ 允许 grid 子项收缩 */
-            padding: 0.3rem;
-            border: 1px solid #e9eef3;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
+            background: white; border-radius: 0.6rem; min-height: 5rem;
+            min-width: 0; padding: 0.3rem; border: 1px solid #e9eef3;
+            display: flex; flex-direction: column; overflow: hidden;
             touch-action: manipulation;
         }
         .day-cell.other-month { background: #f9fbfd; opacity: 0.65; border-color: #eff2f6; }
         .day-cell.today { border: 2px solid #3b82f6; background: #f0f7ff; }
-
         .day-number { font-size: 0.75rem; font-weight: 600; color: #1e293b; margin-bottom: 0.2rem; line-height: 1; }
         .other-month .day-number { color: #94a3b8; }
         .today .day-number { color: #2563eb; }
 
-        /* 事件容器 */
         .events-container {
-            display: flex;
-            flex-direction: column;
-            gap: 0.15rem;
-            overflow-y: auto;
-            overflow-x: hidden;
-            flex: 1;
-            min-width: 0;                /* ✅ 允许收缩 */
-            max-height: 3.8rem;
-            padding-right: 0.1rem;
-            -webkit-user-select: none; user-select: none;
-            touch-action: pan-y;
+            display: flex; flex-direction: column; gap: 0.15rem;
+            overflow-y: auto; overflow-x: hidden; flex: 1;
+            min-width: 0; max-height: 3.8rem; padding-right: 0.1rem;
+            -webkit-user-select: none; user-select: none; touch-action: pan-y;
         }
-
-        /* 事件卡片 - 关键：单行省略 */
         .event-card {
-            background: #eef2ff;
-            border-left: 3px solid #3b82f6;
-            border-radius: 0.3rem;
-            padding: 0.2rem 0.3rem;
-            font-size: 0.6rem;
-            color: #1e293b;
-            cursor: pointer;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
-            -webkit-touch-callout: none;
-            -webkit-user-select: none; user-select: none;
-            touch-action: manipulation;
-            /* ✅ 关键：强制省略 */
-            min-width: 0;
-            max-width: 100%;
-            overflow: hidden;
-            white-space: nowrap;
-            text-overflow: ellipsis;
+            background: #eef2ff; border-left: 3px solid #3b82f6;
+            border-radius: 0.3rem; padding: 0.2rem 0.3rem; font-size: 0.6rem;
+            color: #1e293b; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+            -webkit-touch-callout: none; -webkit-user-select: none; user-select: none;
+            touch-action: manipulation; min-width: 0; max-width: 100%;
+            overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
             line-height: 1.2;
         }
         .event-card:active { background: #dbeafe; transform: scale(0.98); }
-
-        /* 只显示第一行简介，前面加个小点 */
         .event-card .evt-dot {
-            display: inline-block;
-            width: 5px; height: 5px;
-            border-radius: 50%;
-            background: #3b82f6;
-            margin-right: 3px;
-            vertical-align: middle;
-            flex-shrink: 0;
+            display: inline-block; width: 5px; height: 5px; border-radius: 50%;
+            background: #3b82f6; margin-right: 3px; vertical-align: middle; flex-shrink: 0;
         }
         .event-card .evt-text {
-            display: inline;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            vertical-align: middle;
+            display: inline; overflow: hidden; text-overflow: ellipsis;
+            white-space: nowrap; vertical-align: middle;
         }
-
         @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
         .event-card.delete-pending { animation: shake 0.3s ease; background: #fee2e2; border-left-color: #ef4444; }
-
         .empty-message { color: #cbd5e1; font-size: 0.55rem; text-align: center; padding: 0.3rem 0; }
 
         .footer-stats { margin-top: 1rem; font-size: 0.75rem; color: #64748b; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e9eef3; padding-top: 0.8rem; flex-wrap: wrap; gap: 0.5rem; }
@@ -203,31 +140,17 @@
         .config-panel .cancel { background: #e5e7eb; color: #374151; }
         .config-toggle { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; padding: 0.3rem 0.7rem; border-radius: 20px; font-size: 0.75rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.3rem; }
 
-        /* ============================================================
-           手机端深度适配 (<= 600px)
-           ============================================================ */
         @media (max-width: 600px) {
-            body {
-                padding: 0.4rem 0.2rem;
-                padding-top: max(0.3rem, env(safe-area-inset-top));
-                padding-bottom: max(0.3rem, env(safe-area-inset-bottom));
-                align-items: flex-start;
-            }
-            .app-container {
-                padding: 0.8rem 0.5rem;
-                border-radius: 1rem;
-                max-width: 100%;
-            }
+            body { padding: 0.4rem 0.2rem; padding-top: max(0.3rem, env(safe-area-inset-top)); padding-bottom: max(0.3rem, env(safe-area-inset-bottom)); align-items: flex-start; }
+            .app-container { padding: 0.8rem 0.5rem; border-radius: 1rem; max-width: 100%; }
             h1 { font-size: 1.15rem; gap: 0.4rem; }
             h1 i { font-size: 1.3rem; }
             .subhead { font-size: 0.7rem; padding: 0.35rem 0.5rem; margin-bottom: 0.8rem; border-left-width: 3px; }
             .sync-status { font-size: 0.65rem; padding: 0.15rem 0.5rem; }
-
             .form-panel { padding: 0.7rem; gap: 0.5rem; border-radius: 0.9rem; margin-bottom: 0.8rem; }
             .input-group label { font-size: 0.62rem; }
             .input-group input { padding: 0.55rem 0.6rem; border-radius: 0.7rem; font-size: 14px; }
             .add-btn { padding: 0.6rem 1rem; font-size: 0.85rem; min-height: 42px; border-radius: 0.7rem; }
-
             .calendar-header { margin-bottom: 0.6rem; gap: 0.4rem; }
             .month-year { font-size: 1.05rem; gap: 0.3rem; }
             .month-year i { font-size: 1.05rem; }
@@ -235,67 +158,25 @@
             .nav-btn, .today-btn { min-width: 36px; min-height: 36px; border-radius: 0.55rem; }
             .nav-btn { width: 2rem; height: 2rem; font-size: 0.85rem; }
             .today-btn { padding: 0 0.6rem; font-size: 0.72rem; }
-
             .weekdays { gap: 1px; margin-bottom: 0.15rem; }
             .weekday { font-size: 0.6rem; padding: 0.15rem 0; letter-spacing: 0; }
-
-            /* ✅ 关键：手机端极致压缩日历格子 */
-            .calendar-grid {
-                gap: 2px;
-            }
-            .day-cell {
-                min-height: 0;
-                height: auto;
-                aspect-ratio: 1 / 1.15;   /* ✅ 格子保持大致方形，可容纳内容 */
-                min-width: 0;
-                padding: 2px 2px 3px 2px;
-                border-radius: 0.35rem;
-                border-width: 1px;
-            }
+            .calendar-grid { gap: 2px; }
+            .day-cell { min-height: 0; height: auto; aspect-ratio: 1 / 1.15; min-width: 0; padding: 2px 2px 3px 2px; border-radius: 0.35rem; border-width: 1px; }
             .day-cell.today { border-width: 2px; }
-
-            .day-number {
-                font-size: 0.55rem;
-                margin-bottom: 1px;
-                line-height: 1;
-                font-weight: 700;
-            }
-
-            .events-container {
-                gap: 1px;
-                max-height: none;
-                padding-right: 0;
-                overflow-y: auto;
-            }
-
-            /* 事件卡片 - 极致压缩，单行省略 */
-            .event-card {
-                padding: 1px 2px;
-                font-size: 0.48rem;
-                border-left-width: 2px;
-                border-radius: 2px;
-                line-height: 1.15;
-                max-width: 100%;
-            }
-            .event-card .evt-dot {
-                width: 3px; height: 3px;
-                margin-right: 2px;
-            }
-
+            .day-number { font-size: 0.55rem; margin-bottom: 1px; line-height: 1; font-weight: 700; }
+            .events-container { gap: 1px; max-height: none; padding-right: 0; }
+            .event-card { padding: 1px 2px; font-size: 0.48rem; border-left-width: 2px; border-radius: 2px; line-height: 1.15; max-width: 100%; }
+            .event-card .evt-dot { width: 3px; height: 3px; margin-right: 2px; }
             .empty-message { font-size: 0.5rem; padding: 0; }
-
             .footer-stats { font-size: 0.65rem; margin-top: 0.7rem; padding-top: 0.6rem; gap: 0.4rem; }
             .badge { font-size: 0.65rem; padding: 0.15rem 0.6rem; }
             .config-toggle { font-size: 0.65rem; padding: 0.25rem 0.55rem; }
-
             .config-panel { padding: 0.7rem; border-radius: 0.8rem; margin-bottom: 0.8rem; }
             .config-panel h3 { font-size: 0.8rem; }
             .config-panel p { font-size: 0.68rem; }
             .config-panel input { font-size: 0.8rem; padding: 0.45rem 0.6rem; }
             .config-panel button { font-size: 0.75rem; padding: 0.45rem 0.9rem; }
         }
-
-        /* 极窄屏 (<= 380px) 再压一点 */
         @media (max-width: 380px) {
             .day-cell { aspect-ratio: 1 / 1.25; }
             .day-number { font-size: 0.5rem; }
@@ -369,9 +250,9 @@
 
     let projects = {};
     let currentYear, currentMonth;
-    const today = new Date();
-    currentYear = today.getFullYear();
-    currentMonth = today.getMonth();
+    const now = new Date();
+    currentYear = now.getFullYear();
+    currentMonth = now.getMonth();
 
     let gistId = '';
     let githubToken = '';
@@ -410,7 +291,6 @@
         clearTimeout(toastEl._timer);
         toastEl._timer = setTimeout(() => toastEl.classList.remove('show'), duration);
     }
-
     function setSyncStatus(type, text) {
         syncStatusEl.className = 'sync-status ' + type;
         const icon = type === 'synced' ? 'fa-check-circle'
@@ -420,33 +300,25 @@
                    : 'fa-database';
         syncStatusEl.innerHTML = `<i class="fas ${icon}"></i> ${text}`;
     }
-
     function formatDateKey(date) {
         const y = date.getFullYear();
         const m = String(date.getMonth() + 1).padStart(2, '0');
         const d = String(date.getDate()).padStart(2, '0');
         return `${y}-${m}-${d}`;
     }
-
-    function setDefaultDate() {
-        projectDateInput.value = formatDateKey(new Date());
-    }
+    function setDefaultDate() { projectDateInput.value = formatDateKey(new Date()); }
 
     function loadLocalProjects() {
         const stored = localStorage.getItem(LOCAL_KEY);
-        if (stored) {
-            try { projects = JSON.parse(stored) || {}; } catch(e) { projects = {}; }
-        }
+        if (stored) { try { projects = JSON.parse(stored) || {}; } catch(e) { projects = {}; } }
         localTimestamp = parseInt(localStorage.getItem(LOCAL_TS_KEY) || '0', 10);
     }
-
     function saveLocalProjects() {
         localStorage.setItem(LOCAL_KEY, JSON.stringify(projects));
         localTimestamp = Date.now();
         localStorage.setItem(LOCAL_TS_KEY, String(localTimestamp));
         markDirty();
     }
-
     function markDirty() {
         isDirty = true;
         if (syncEnabled && !pushInFlight) setSyncStatus('dirty', '待同步');
@@ -468,6 +340,7 @@
         localStorage.setItem(CONFIG_KEY, JSON.stringify({ gistId, token: githubToken }));
     }
 
+    // ✅ 修复：删除了 Cache-Control 头，改用 URL 时间戳避免缓存
     async function pullFromGist(force = false) {
         if (!syncEnabled) return false;
         if (isSyncing || pushInFlight) return false;
@@ -478,8 +351,10 @@
         isSyncing = true;
         setSyncStatus('syncing', '拉取中...');
         try {
-            const resp = await fetch(`https://api.github.com/gists/${gistId}`, {
-                headers: { 'Authorization': `token ${githubToken}`, 'Cache-Control': 'no-cache' }
+            const url = `https://api.github.com/gists/${gistId}?t=${Date.now()}`;
+            const resp = await fetch(url, {
+                headers: { 'Authorization': `token ${githubToken}` }
+                // ❌ 删除了 'Cache-Control': 'no-cache'
             });
             if (!resp.ok) throw new Error('HTTP ' + resp.status);
             const data = await resp.json();
@@ -616,7 +491,6 @@
                     card.dataset.desc = proj.desc;
                     card.title = proj.desc;
 
-                    // ✅ 单行省略结构
                     const dot = document.createElement('span');
                     dot.className = 'evt-dot';
                     const text = document.createElement('span');
@@ -625,7 +499,6 @@
                     card.appendChild(dot);
                     card.appendChild(text);
 
-                    // 长按删除
                     const startLongPress = (e) => {
                         if (e.type === 'mousedown' && e.button !== 0) return;
                         if (longPressTimer) clearTimeout(longPressTimer);
@@ -780,9 +653,7 @@
         });
 
         window.addEventListener('focus', () => {
-            if (syncEnabled && !isSyncing && !isDirty) {
-                pullFromGist();
-            }
+            if (syncEnabled && !isSyncing && !isDirty) pullFromGist();
         });
     }
 
